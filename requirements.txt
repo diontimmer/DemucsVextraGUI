@@ -1,0 +1,4 @@
+demucs==3.0.5
+glob2==0.7
+PySimpleGui==4.60.3
+python-dotenv==0.21.0

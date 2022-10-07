@@ -1,0 +1,1 @@
+audioformats = [".mp3", ".wav", ".flac"]
