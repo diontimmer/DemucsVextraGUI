@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+from static.const import *
 
 
 scolor="teal"
@@ -9,7 +10,7 @@ windowcolor="grey18"
 selector = [[
 	sg.Text('Folder', background_color=bgcolor), 
 	sg.In(size=(25,1), enable_events=True ,key='-FOLDER-', readonly=True), 
-	sg.FolderBrowse(button_color=scolor), 
+	sg.FolderBrowse(button_color=scolor),
 	sg.Checkbox('Iterate down folder tree? (Recursive)', key="-REC-", enable_events=True, background_color=scolor),
 	sg.Checkbox('Show paths?', key="-SHOWPATHS-", enable_events=True, background_color=scolor),
 	sg.Button("Refresh", button_color=scolor)
@@ -21,12 +22,14 @@ loglist = [sg.Listbox([], no_scrollbar=True, size=(0,8), key= '-LOG-', backgroun
 log = []
 
 modulecol1 = [sg.Column([
-	[sg.Checkbox('Vocal only?', key="-VOC-", enable_events=True, background_color=scolor)],
+	[sg.Checkbox('Vocal + Instru only?', key="-VOC-", enable_events=True, background_color=scolor)],
 	[sg.Text('Hardware Type', background_color=bgcolor), sg.Combo(["gpu", "cpu"], default_value="gpu", button_background_color=scolor, key='-HARDWARE-', readonly=True)],
-	[sg.Text('Seperation Model', background_color=bgcolor), sg.Combo(["mdx", "mdx_extra", "mdx_extra_q", "SIG", "83fc094f"], default_value="mdx_extra_q", button_background_color=scolor, key='-MODEL-', readonly=True)],
+	[sg.Text('Seperation Model', background_color=bgcolor), sg.Combo(modeltypes, default_value="mdx_extra_q", button_background_color=scolor, key='-MODEL-', readonly=True)],
 	[sg.Text('Output', background_color=bgcolor), 
 	sg.In(size=(25,1), enable_events=True ,key='-OUTPUT-', readonly=True), 
-	sg.FolderBrowse(button_color=scolor)]
+	sg.FolderBrowse(button_color=scolor),
+	sg.Button("Clear", tooltip="Output folder will be in the selected folder.", button_color=scolor)],
+	[sg.Text('Max Jobs', background_color=bgcolor), sg.Combo(jobamts, default_value=1, key='-JOBS-')]
 	],
 	vertical_alignment="top",
 	background_color=bgcolor,

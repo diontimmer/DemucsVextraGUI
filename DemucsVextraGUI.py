@@ -56,6 +56,18 @@ def appendfilenames(files):
 	strlist = "".join(filelist)
 	return str(strlist)
 
+def processFilenames(folder):
+	for f in os.listdir(folder):
+		if f in modeltypes:
+			for d in os.listdir(folder + "/" + f):
+				for file in (os.listdir(folder + "/" + f + "/" + d)):
+					if d not in file:
+						oldname = (folder + "/" + f + "/" + d + "/" + file)
+						newname = (folder + "/" + f + "/" + d + "/" + d + "_" + file)
+						os.rename(oldname, newname)
+
+
+
 def runCmd():
 	currentfiles = getfiles(folder, values['-REC-'])
 	try:
@@ -63,10 +75,14 @@ def runCmd():
 		model = "-n " + values["-MODEL-"]
 		hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
 		output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
+		jobs = f" -j {values['-JOBS-']}"
 		f = appendfilenames(currentfiles)
-		filelog(f"Processing started..")
-		cmd = f"demucs{f}{voconly}{hw}{output} {model}".replace("\\", "/")
+		cmd = f"demucs{f}{voconly}{hw}{jobs}{output} {model}".replace("\\", "/")
+		filelog(f"Process in cmd started with command {cmd}")
+		window['Process'].update(disabled=True)
 		os.system(cmd)
+		filelog("Process finished!")
+		processFilenames(outputfolder)
 		window['Process'].update(disabled=False)
 
 	except NameError as error:
@@ -115,7 +131,6 @@ if CONFIG['OUTPUT'] != "":
 
 filelog("Ready to juice! By Dion Timmer")
 
-
 ## Event Loop
 
 while True:
@@ -146,14 +161,24 @@ while True:
 			currentfiles = getfiles(folder, rec)
 			updatefilelist(values["-SHOWPATHS-"], currentfiles)
 
+	if event == 'Clear':
+		outputfolder = values['-FOLDER-']
+		outputset = False
+		SetConfigKey('OUTPUT', '')
+		window.Element('-OUTPUT-').update(value='')
+
+
+
 	if event == '-SHOWPATHS-':
 		if folderset == True:
 			currentfiles = getfiles(folder, rec)
 			updatefilelist(values["-SHOWPATHS-"], currentfiles)
 
 	if event == 'Process':
-		threading.Thread(target=runCmd).start()
-		window['Process'].update(disabled=True)
+		if folderset == True:
+			threading.Thread(target=runCmd).start()
+		else:
+			filelog("Please browse to a folder to process.")
 
 
 window.close()
