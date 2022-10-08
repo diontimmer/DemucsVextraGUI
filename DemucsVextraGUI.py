@@ -228,6 +228,9 @@ if CONFIG['PROCTYPE'] != "":
     else:
         window.Element('-FOLDEROPT-').update(value=True)
         setListEnabled(True)
+else:
+    setListEnabled(False)
+
 
 
 
