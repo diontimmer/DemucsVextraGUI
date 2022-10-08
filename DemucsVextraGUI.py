@@ -76,8 +76,9 @@ def runCmd():
 		hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
 		output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
 		jobs = f" -j {values['-JOBS-']}"
+		frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
 		f = appendfilenames(currentfiles)
-		cmd = f"demucs{f}{voconly}{hw}{jobs}{output} {model}".replace("\\", "/")
+		cmd = f"demucs{f}{voconly}{hw}{jobs}{frmt}{output} {model}".replace("\\", "/")
 		filelog(f"Process in cmd started with command {cmd}")
 		window['Process'].update(disabled=True)
 		os.system(cmd)

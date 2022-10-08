@@ -29,7 +29,8 @@ modulecol1 = [sg.Column([
 	sg.In(size=(25,1), enable_events=True ,key='-OUTPUT-', readonly=True), 
 	sg.FolderBrowse(button_color=scolor),
 	sg.Button("Clear", tooltip="Output folder will be in the selected folder.", button_color=scolor)],
-	[sg.Text('Max Jobs', background_color=bgcolor), sg.Combo(jobamts, default_value=1, key='-JOBS-')]
+	[sg.Text('Max Jobs', background_color=bgcolor), sg.Combo(jobamts, default_value=1, key='-JOBS-')],
+	[sg.Text('format', background_color=bgcolor), sg.Combo(["wav", "mp3"], default_value="wav", key='-FORMAT-')]
 	],
 	vertical_alignment="top",
 	background_color=bgcolor,
