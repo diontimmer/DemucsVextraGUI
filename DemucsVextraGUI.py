@@ -115,7 +115,7 @@ def runFolderCmd():
     try:
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
         model = "-n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
+        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
         output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
