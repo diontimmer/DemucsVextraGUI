@@ -115,7 +115,7 @@ def runFolderCmd():
     try:
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
         model = "-n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
+        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
         output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
@@ -135,7 +135,7 @@ def runFileCmd():
     try:
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
         model = "-n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
+        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
         output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {os.path.dirname(file)}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
@@ -266,10 +266,11 @@ while True:
             window.Element('-LIST-').update(disabled=True)
 
     if event == '-OUTPUT-':
-        outputfolder = values['-FOLDER-']
+        outputfolder = values['-OUTPUT-']
         outputset = True
-        SetConfigKey('OUTPUT', outputfolder)
         filelog("Output Set")
+        SetConfigKey('OUTPUT', outputfolder)
+
 
     if event == '-REFRESH-':
         if folderset == True:
