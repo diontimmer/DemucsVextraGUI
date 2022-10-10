@@ -5,10 +5,32 @@ from static.guielements import *
 from static.const import *
 import threading
 import dotenv
+from subprocess import Popen, PIPE, STDOUT
+from shlex import split
+import sys
+
 
 # ****************************************************************************
 # *                                  helpers                                 *
 # ****************************************************************************
+
+def startDemucsProcess(cmd, output):
+    filelog(f"Process started with command {cmd}")
+    window['Process'].update(disabled=True)
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
+    while True:
+        procoutput = process.stdout.readline()
+        erroutput = process.stderr.readline()
+        if procoutput == '' and process.poll() is not None :
+            break
+        if procoutput :
+            filelog(procoutput.strip())
+        if erroutput :
+            filelog(erroutput.strip())
+    filelog("Process finished!")
+    processFilenames(output.replace(" -o ", ""))
+    window['Process'].update(disabled=False)
+
 
 def SetConfigKey(key, value):
     value = str(value)
@@ -114,41 +136,29 @@ def runFolderCmd():
     currfolderfiles = getfiles(folder, values['-REC-'])
     try:
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
-        model = "-n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else ""
+        model = " -n " + values["-MODEL-"]
+        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
         output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
         f = appendfilenames(currfolderfiles)
-        cmd = f"demucs{f}{voconly}{hw}{jobs}{frmt}{output} {model}".replace("\\", "/")
-        filelog(f"Process in cmd started with command {cmd}")
-        window['Process'].update(disabled=True)
-        # print(cmd) # debug
-        os.system(cmd)
-        filelog("Process finished!")
-        processFilenames(output)
-        window['Process'].update(disabled=False)
+        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
+        startDemucsProcess(cmd, output)
     except NameError as error:
         filelog(error)
 
 def runFileCmd():
     try:
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
-        model = "-n " + values["-MODEL-"]
+        model = " -n " + values["-MODEL-"]
         hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
-        output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {os.path.dirname(file)}"
+        output = f" -o {values['-OUTPUT-']}" if outputset == True else f"-o {os.path.dirname(file)}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
         f = f' "{file}"'
-        cmd = f"demucs{f}{voconly}{hw}{jobs}{frmt}{output} {model}".replace("\\", "/")
-        filelog(f"Process in cmd started with command {cmd}")
-        window['Process'].update(disabled=True)
-        # print(cmd) # debug
-        os.system(cmd)
-        filelog("Process finished!")
-        processFilenames(output.replace(" -o ", ""))
-        window['Process'].update(disabled=False)
-    except NameError as error:
+        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{model}{output}'.replace("\\", "/")
+        startDemucsProcess(cmd, output)
+    except Exception as error:
         filelog(error)
 
 # ****************************************************************************

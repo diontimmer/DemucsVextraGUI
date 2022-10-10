@@ -1,4 +1,5 @@
-PySoundFile==0.9.0.post1
+soundfile
+ffmpeg
 demucs==3.0.5
 glob2==0.7
 PySimpleGui==4.60.3
