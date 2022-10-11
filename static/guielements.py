@@ -7,6 +7,8 @@ scolor2="darkslategrey"
 bgcolor="snow4"
 windowcolor="grey18"
 
+progbar = [sg.ProgressBar(max_value=100, size=(0,30), expand_x=True)]
+
 fileselector = sg.Column([
 	[sg.Text('File:', background_color=windowcolor, key='-FILETXT-'), 
 	sg.In(size=(25,1), enable_events=True ,key='-FILE-', readonly=True), 
@@ -48,7 +50,7 @@ bottomcol = sg.Column(
 	[
 	[sg.Radio("File", "PROCGROUP", default=True, background_color=scolor, key='-FILEOPT-', enable_events=True), sg.Radio("Folder", "PROCGROUP", default=False, background_color=scolor, key='-FOLDEROPT-', enable_events=True)],
 	[sg.Button("Process", button_color=scolor, size=30, border_width=4)], 
-	loglist], 
+	loglist, progbar], 
 	element_justification="c", justification="c", expand_x=True, background_color=windowcolor
 	)
 

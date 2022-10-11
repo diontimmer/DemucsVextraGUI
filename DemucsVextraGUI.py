@@ -25,6 +25,7 @@ def startDemucsProcess(cmd, output):
             break
         if procoutput :
             filelog(procoutput.strip())
+            # print(procoutput.split("\n")[0].replace("%", ""))
         if erroutput :
             filelog(erroutput.strip())
     filelog("Process finished!")
@@ -83,17 +84,17 @@ def appendfilenames(files):
     return str(strlist)
 
 def processFilenames(folder):
-    try:
-        for f in os.listdir(folder):
-            if f in modeltypes:
-                for d in os.listdir(folder + "/" + f):
-                    for file in (os.listdir(folder + "/" + f + "/" + d)):
-                        if d not in file:
+    for f in os.listdir(folder):
+        if f in modeltypes:
+            for d in os.listdir(folder + "/" + f):
+                for file in (os.listdir(folder + "/" + f + "/" + d)):
+                    if d not in file:
+                        try:
                             oldname = (folder + "/" + f + "/" + d + "/" + file)
                             newname = (folder + "/" + f + "/" + d + "/" + d + "_" + file)
                             os.rename(oldname, newname)
-    except OSError as e:
-        filelog("Error renaming pulled files: " + e)
+                        except Exception as e:
+                            filelog("Error renaming pulled files: " + e)
 
 def removeBadCharsInPaths(paths):
     ls = []
@@ -152,11 +153,11 @@ def runFileCmd():
         voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
         model = " -n " + values["-MODEL-"]
         hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
-        output = f" -o {values['-OUTPUT-']}" if outputset == True else f"-o {os.path.dirname(file)}"
+        output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {os.path.dirname(file)}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
         f = f' "{file}"'
-        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{model}{output}'.replace("\\", "/")
+        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
         startDemucsProcess(cmd, output)
     except Exception as error:
         filelog(error)
