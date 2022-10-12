@@ -21,18 +21,14 @@ def startDemucsProcess(cmd, output, modeltype, tracknames):
     #os.system(cmd)
 
 
-    ##### SUBPROCESS METHOD, PRETTY BUG #####
-    # process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
-    # while True:
-    #     procoutput = process.stdout.readline()
-    #     erroutput = process.stderr.readline()
-    #     if procoutput == '' and process.poll() is not None :
-    #         break
-    #     if procoutput :
-    #         filelog(procoutput.strip())
-    #         # print(procoutput.split("\n")[0].replace("%", ""))
-    #     if erroutput :
-    #         filelog(erroutput.strip())
+    #### SUBPROCESS METHOD, PRETTY BUG #####
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
+    while True:
+        procoutput = process.communicate()[0]
+        if procoutput == '' and process.poll() is not None :
+            break
+        if procoutput :
+            print(procoutput)
     filelog("Process finished!")
     window['Process'].update(disabled=False)
     processFilenames(output.replace(" -o ", ""), modeltype, tracknames)
@@ -48,6 +44,9 @@ def SetConfigKey(key, value):
 def filelog(logmsg):
     log.append(logmsg)
     window.Element('-LOG-').update(log, scroll_to_index=len(log))
+
+def filelogreplace(logmsg):
+    window.Element('-LOG-').update([logmsg], scroll_to_index=0)
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
