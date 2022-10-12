@@ -50,7 +50,7 @@ bottomcol = sg.Column(
 	[
 	[sg.Radio("File", "PROCGROUP", default=True, background_color=scolor, key='-FILEOPT-', enable_events=True), sg.Radio("Folder", "PROCGROUP", default=False, background_color=scolor, key='-FOLDEROPT-', enable_events=True)],
 	[sg.Button("Process", button_color=scolor, size=30, border_width=4)], 
-	loglist, progbar], 
+	loglist], 
 	element_justification="c", justification="c", expand_x=True, background_color=windowcolor
 	)
 

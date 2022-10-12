@@ -8,29 +8,35 @@ import dotenv
 from subprocess import Popen, PIPE, STDOUT
 from shlex import split
 import sys
+from pathlib import Path
 
 
 # ****************************************************************************
 # *                                  helpers                                 *
 # ****************************************************************************
 
-def startDemucsProcess(cmd, output):
+def startDemucsProcess(cmd, output, modeltype, tracknames):
     filelog(f"Process started with command {cmd}")
     window['Process'].update(disabled=True)
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
-    while True:
-        procoutput = process.stdout.readline()
-        erroutput = process.stderr.readline()
-        if procoutput == '' and process.poll() is not None :
-            break
-        if procoutput :
-            filelog(procoutput.strip())
-            # print(procoutput.split("\n")[0].replace("%", ""))
-        if erroutput :
-            filelog(erroutput.strip())
+    #os.system(cmd)
+
+
+    ##### SUBPROCESS METHOD, PRETTY BUG #####
+    # process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
+    # while True:
+    #     procoutput = process.stdout.readline()
+    #     erroutput = process.stderr.readline()
+    #     if procoutput == '' and process.poll() is not None :
+    #         break
+    #     if procoutput :
+    #         filelog(procoutput.strip())
+    #         # print(procoutput.split("\n")[0].replace("%", ""))
+    #     if erroutput :
+    #         filelog(erroutput.strip())
     filelog("Process finished!")
-    processFilenames(output.replace(" -o ", ""))
     window['Process'].update(disabled=False)
+    processFilenames(output.replace(" -o ", ""), modeltype, tracknames)
+
 
 
 def SetConfigKey(key, value):
@@ -75,7 +81,7 @@ def getfiles(directory, recursive):
         filelog("No valid wavs found!")
     return files
 
-def appendfilenames(files):
+def appendfilepaths(files):
     filelist = []
     for f in files:
         filename = f' "{f}"'
@@ -83,24 +89,30 @@ def appendfilenames(files):
     strlist = "".join(filelist)
     return str(strlist)
 
-def processFilenames(folder):
+def processFilenames(folder, modeltype, tracknames):
     for f in os.listdir(folder):
-        if f in modeltypes:
-            for d in os.listdir(folder + "/" + f):
-                for file in (os.listdir(folder + "/" + f + "/" + d)):
-                    if d not in file:
-                        try:
-                            oldname = (folder + "/" + f + "/" + d + "/" + file)
-                            newname = (folder + "/" + f + "/" + d + "/" + d + "_" + file)
+        if f == modeltype:
+            modelfolder = f
+            for trackfolder in os.listdir(folder + "/" + modelfolder):
+                if trackfolder in tracknames:
+                    for audiofile in (os.listdir(folder + "/" + modelfolder + "/" + trackfolder)):
+                        if trackfolder not in audiofile:
+                            oldname = (folder + "/" + modelfolder + "/" + trackfolder + "/" + audiofile)
+                            newname = (folder + "/" + modelfolder + "/" + trackfolder + "/" + trackfolder + "_" + audiofile)
                             os.rename(oldname, newname)
-                        except Exception as e:
-                            filelog("Error renaming pulled files: " + e)
 
 def removeBadCharsInPaths(paths):
     ls = []
     for p in paths:
         ls.append(p.replace("\\", "/"))
     return ls
+
+def getcleanfilenames(files):
+    filelist = []
+    for f in files:
+        filename = Path(f).stem
+        filelist.append(filename)
+    return filelist
 
 
 def setListEnabled(enabled):
@@ -142,9 +154,9 @@ def runFolderCmd():
         output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
         jobs = f" -j {values['-JOBS-']}"
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
-        f = appendfilenames(currfolderfiles)
+        f = appendfilepaths(currfolderfiles)
         cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
-        startDemucsProcess(cmd, output)
+        startDemucsProcess(cmd, output, values["-MODEL-"], getcleanfilenames(currfolderfiles))
     except NameError as error:
         filelog(error)
 
@@ -158,7 +170,7 @@ def runFileCmd():
         frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
         f = f' "{file}"'
         cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
-        startDemucsProcess(cmd, output)
+        startDemucsProcess(cmd, output, values["-MODEL-"], Path(file).stem)
     except Exception as error:
         filelog(error)
 
@@ -179,7 +191,6 @@ layout = [[
 
 
 window = sg.Window('Demucs Wrapper', layout,resizable=True, finalize=True, background_color=windowcolor, size=(960,800), icon=resource_path("data/dtico.ico"), font=("Calibri", 11))
-
 
 # ****************************************************************************
 # *                                  CONFIG                                  *
