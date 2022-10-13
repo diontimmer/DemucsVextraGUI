@@ -6,34 +6,40 @@ from static.const import *
 import threading
 import dotenv
 from subprocess import Popen, PIPE, STDOUT
-from shlex import split
 import sys
 from pathlib import Path
+import re
+import select
 
 
 # ****************************************************************************
 # *                                  helpers                                 *
 # ****************************************************************************
 
-def startDemucsProcess(cmd, output, modeltype, tracknames):
-    filelog(f"Process started with command {cmd}")
+def startDemucsProcess(cmd, modeltype, tracknames):
     window['Process'].update(disabled=True)
-    #os.system(cmd)
+    process = Popen(cmd, encoding='utf8', stderr=STDOUT, stdout=PIPE)
+    while process.poll() is None:
+        procoutput = process.stdout.readline()
+        if procoutput:
+            if "Separated" in procoutput or "Separating" in procoutput or "Selected" in procoutput:
+                filelog(procoutput)
+            if "%" in procoutput:
+                m = re.search('(\d+)%', procoutput)
+                if m:
+                    perc = int(m.group(1))
+                    window['-PROGBAR-'].update(current_count=perc, bar_color=(percentage_to_hex(perc), None))
 
 
-    #### SUBPROCESS METHOD, PRETTY BUG #####
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
-    while True:
-        procoutput = process.communicate()[0]
-        if procoutput == '' and process.poll() is not None :
-            break
-        if procoutput :
-            print(procoutput)
     filelog("Process finished!")
+    window['-PROGBAR-'].update(current_count=0)
     window['Process'].update(disabled=False)
-    processFilenames(output.replace(" -o ", ""), modeltype, tracknames)
+    processFilenames(values['-OUTPUT-'], modeltype, tracknames)
 
-
+def percentage_to_hex(percentage):
+    rgb = (0, round(percentage * 2.5), 0)
+    rgbval = '%02x%02x%02x' % rgb
+    return f'#{rgbval}'
 
 def SetConfigKey(key, value):
     value = str(value)
@@ -73,9 +79,9 @@ def updatefilelist(showpaths, paths):
 
 def getfiles(directory, recursive):
     files = []
-    for file in glob.iglob(directory + '**/**', recursive=recursive):
-        if file.endswith(tuple(audioformats)):
-            files.append(file)
+    for f in glob.iglob(directory + '**/**', recursive=recursive):
+        if f.endswith(tuple(audioformats)):
+            files.append(f)
     if len(files) == 0:
         filelog("No valid wavs found!")
     return files
@@ -98,6 +104,8 @@ def processFilenames(folder, modeltype, tracknames):
                         if trackfolder not in audiofile:
                             oldname = (folder + "/" + modelfolder + "/" + trackfolder + "/" + audiofile)
                             newname = (folder + "/" + modelfolder + "/" + trackfolder + "/" + trackfolder + "_" + audiofile)
+                            if os.path.exists(newname):
+                                os.remove(newname)
                             os.rename(oldname, newname)
 
 def removeBadCharsInPaths(paths):
@@ -147,29 +155,28 @@ def setListEnabled(enabled):
 def runFolderCmd():
     currfolderfiles = getfiles(folder, values['-REC-'])
     try:
-        voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
-        model = " -n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
-        output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {folder}"
-        jobs = f" -j {values['-JOBS-']}"
-        frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
-        f = appendfilepaths(currfolderfiles)
-        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
-        startDemucsProcess(cmd, output, values["-MODEL-"], getcleanfilenames(currfolderfiles))
+        voconly = ["--two-stems=vocals"] if values['-VOC-'] == True else []
+        model = ["-n", values["-MODEL-"]]
+        hw = ["-d", "cpu"] if values["-HARDWARE-"] == "cpu" else ["-d","cuda"]
+        output = ["-o", values['-OUTPUT-']] if outputset == True else ["-o", folder]
+        jobs = ["-j",values['-JOBS-']]
+        frmt = ["--mp3"] if values['-FORMAT-'] == "mp3" else []
+        cmd = ['demucs'] + currfolderfiles + voconly + hw + jobs + frmt + output + model
+        startDemucsProcess(cmd, values["-MODEL-"], getcleanfilenames(currfolderfiles))
     except NameError as error:
         filelog(error)
 
 def runFileCmd():
     try:
-        voconly = " --two-stems=vocals" if values['-VOC-'] == True else ""
-        model = " -n " + values["-MODEL-"]
-        hw = " -d cpu" if values["-HARDWARE-"] == "cpu" else " -d cuda"
-        output = f" -o {values['-OUTPUT-']}" if outputset == True else f" -o {os.path.dirname(file)}"
-        jobs = f" -j {values['-JOBS-']}"
-        frmt = f" --mp3" if values['-FORMAT-'] == "mp3" else ""
-        f = f' "{file}"'
-        cmd = f'demucs{f}{voconly}{hw}{jobs}{frmt}{output}{model}'.replace("\\", "/")
-        startDemucsProcess(cmd, output, values["-MODEL-"], Path(file).stem)
+        voconly = ["--two-stems=vocals"] if values['-VOC-'] == True else []
+        model = ["-n", values["-MODEL-"]]
+        hw = ["-d", "cpu"] if values["-HARDWARE-"] == "cpu" else ["-d","cuda"]
+        output = ["-o", values['-OUTPUT-']] if outputset == True else ["-o", os.path.dirname(file)]
+        jobs = ["-j",values['-JOBS-']]
+        frmt = ["--mp3"] if values['-FORMAT-'] == "mp3" else []
+        f = [file]
+        cmd = ['demucs'] + f + voconly + hw + jobs + frmt + output + model
+        startDemucsProcess(cmd, values["-MODEL-"], Path(file).stem)
     except Exception as error:
         filelog(error)
 
@@ -189,7 +196,7 @@ layout = [[
     ]]
 
 
-window = sg.Window('Demucs Wrapper', layout,resizable=True, finalize=True, background_color=windowcolor, size=(960,800), icon=resource_path("data/dtico.ico"), font=("Calibri", 11))
+window = sg.Window('Demucs Wrapper', layout, resizable=True, finalize=True, background_color=windowcolor, size=(960,800), icon=resource_path("data/dtico.ico"), font=("Calibri", 11))
 
 # ****************************************************************************
 # *                                  CONFIG                                  *
