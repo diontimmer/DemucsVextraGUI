@@ -4,3 +4,4 @@ __pycache__/*
 static/__pycache__/*
 #data/.env
 data/.env
+data/.env

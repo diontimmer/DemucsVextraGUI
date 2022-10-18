@@ -9,8 +9,6 @@ from subprocess import Popen, PIPE, STDOUT
 import sys
 from pathlib import Path
 import re
-import select
-
 
 # ****************************************************************************
 # *                                  helpers                                 *
