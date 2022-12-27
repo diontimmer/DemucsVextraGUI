@@ -34,7 +34,7 @@ log = []
 modulecol1 = [sg.Column([
     [sg.Checkbox('Vocal + Instru only?', key="-VOC-", enable_events=True, background_color=bgcolor)],
     [sg.Text('Hardware Acceleration', background_color=bgcolor), sg.Combo(["gpu", "cpu"], default_value="gpu", button_background_color=scolor, key='-HARDWARE-', readonly=True, enable_events=True)],
-    [sg.Text('Separation Model', background_color=bgcolor), sg.Combo(modeltypes, default_value="mdx_extra", button_background_color=scolor, key='-MODEL-', readonly=True, enable_events=True)],
+    [sg.Text('Separation Model', background_color=bgcolor), sg.Combo(modeltypes, default_value="htdemucs", button_background_color=scolor, key='-MODEL-', readonly=True, enable_events=True)],
     [sg.Text('Output', background_color=bgcolor), 
     sg.In(size=(25,1), enable_events=True ,key='-OUTPUT-', readonly=True), 
     sg.FolderBrowse(button_color=scolor),
